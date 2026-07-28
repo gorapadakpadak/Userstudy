@@ -247,11 +247,15 @@ if (typeof jsPsychPipe !== "undefined" && DATAPIPE_ID && DATAPIPE_ID !== "YOUR_D
         <li>Distortion appears around the object mask, or mask boundary traces remain</li></ul>
     <button id="gl-close">Close</button>
   </div>`;
-  document.body.appendChild(btn); document.body.appendChild(modal);
   const open=()=>modal.style.display='flex', close=()=>modal.style.display='none';
   btn.addEventListener('click',open);
   modal.addEventListener('click',e=>{ if(e.target===modal) close(); });
   modal.querySelector('#gl-close').addEventListener('click',close);
+  // append to <html> (not <body>) so jsPsych rebuilding <body> can't remove it.
+  const mount=()=>{ if(!document.getElementById('gl-btn')){ document.documentElement.appendChild(btn); document.documentElement.appendChild(modal); } };
+  mount();
+  // re-mount shortly after jsPsych builds its DOM, just in case
+  setTimeout(mount, 300); setTimeout(mount, 1200);
 })();
 
 jsPsych.run(timeline);
