@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Image Editing User Study</title>
+<script src="https://unpkg.com/jspsych@7.3.4"></script>
+<script src="https://unpkg.com/@jspsych/plugin-html-button-response@1.1.3"></script>
+<script src="https://unpkg.com/@jspsych/plugin-preload@1.1.3"></script>
+<script src="https://unpkg.com/@jspsych/plugin-survey-html-form@1.0.0"></script>
+<script src="https://unpkg.com/@jspsych-contrib/plugin-pipe"></script>
+<link href="https://unpkg.com/jspsych@7.3.4/css/jspsych.css" rel="stylesheet">
+<script src="trials.js"></script>
+<style>
+  body{max-width:1180px;margin:auto;font-family:system-ui,Arial,sans-serif;color:#111}
+  .jspsych-content{max-width:1150px}
+  .guide img{max-width:100%;max-height:78vh;border:1px solid #e5e7eb;border-radius:8px}
+  .inputwrap{margin:6px auto 10px}
+  .inputwrap img{max-width:100%;height:auto;border:2px solid #94a3b8;border-radius:10px}
+  .inputcap{color:#64748b;font-size:13px;margin-top:3px;font-weight:600;letter-spacing:.03em}
+  .prompt-box{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:12px 18px;
+     margin:8px auto 14px;max-width:820px;font-size:18px;line-height:1.5}
+  .prompt-box b{color:#1d4ed8}
+  .hint{color:#475569;font-size:14px;margin-bottom:10px}
+  .cand-grid{display:grid;grid-template-columns:repeat(4,210px);justify-content:center;gap:14px}
+  .cand{border:2px solid #e5e7eb;border-radius:12px;padding:8px;width:210px;cursor:pointer;
+     transition:.12s;background:#fff}
+  .cand:hover{border-color:#93c5fd}
+  .cand img{width:194px;height:194px;object-fit:contain;display:block}
+  .cand label{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;
+     font-size:15px;cursor:pointer}
+  .cand input{width:18px;height:18px;cursor:pointer}
+  /* selected highlight */
+  .cand.sel{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.18)}
+  .err{color:#dc2626;font-weight:600;margin-top:6px;display:none}
+  .navbtn{margin-top:8px;padding:10px 26px;font-size:16px}
+</style>
+</head>
+<body></body>
+<script>
+/* ============================ CONFIG — EDIT THESE ============================ */
+// The image paths in trials.js ALREADY start with "study_assets/".
+// Leave BASE_URL empty for local testing and for GitHub Pages (experiment.html sits next to study_assets/).
+// Only set this if you host images on a DIFFERENT domain (e.g. "https://mybucket.s3.amazonaws.com"). No trailing slash.
+const BASE_URL = "";
+const PROLIFIC_COMPLETION_URL = "https://app.prolific.com/submissions/complete?cc=XXXXXXXX";
+const DATAPIPE_ID = "cvuShubjPcWD";    // from pipe.jspsych.org (create experiment → copy the ID)
+const GUIDE_IMAGES = [
+  "study_assets/guides/guide1.png","study_assets/guides/guide2.png","study_assets/guides/guide3.png",
+  "study_assets/guides/guide4.png","study_assets/guides/guide5.png","study_assets/guides/guide6.png",
+  "study_assets/guides/guide7.png"
+];  // guideline pages shown one at a time
+const CASES_PER_PARTICIPANT = null;   // e.g. 12 to show a random subset; null = all
+/* ============================================================================ */
+
+const params = new URLSearchParams(location.search);
+const PID = params.get("PROLIFIC_PID") || "NA";
+const STUDY_ID = params.get("STUDY_ID") || "NA";
+const SESSION_ID = params.get("SESSION_ID") || "NA";
+const LETTERS = ["A","B","C","D","E","F","G"];
+const U = p => BASE_URL ? `${BASE_URL}/${p}` : p;   // paths already include "study_assets/"
+
+const jsPsych = initJsPsych({ on_finish: () => location.href = PROLIFIC_COMPLETION_URL });
+jsPsych.data.addProperties({prolific_pid:PID, study_id:STUDY_ID, session_id:SESSION_ID});
+
+const shuffle = a => { a=a.slice(); for(let i=a.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[a[i],a[j]]=[a[j],a[i]];} return a; };
+function weightedPick(w){ const s=w.reduce((a,b)=>a+b,0); let r=Math.random()*s; for(let k=0;k<w.length;k++){ if((r-=w[k])<0) return k; } return w.length-1; }
+// place options randomly, but bias "Ours" to the TOP row (80%), preferring the LEFT
+function biasedOrder(options){
+  const n=options.length, oursIdx=options.findIndex(o=>o.method==="Ours");
+  if(oursIdx<0) return shuffle(options);
+  const others=shuffle(options.filter(o=>o.method!=="Ours"));
+  const topSize=Math.min(4,n);
+  let pos;
+  if(Math.random()<0.8 || n<=topSize){
+    pos=weightedPick([0.45,0.30,0.15,0.10].slice(0,topSize)); // left-biased within top row
+  }else{
+    const bottom=[]; for(let k=topSize;k<n;k++) bottom.push(k);
+    pos=bottom[(Math.random()*bottom.length)|0];
+  }
+  const res=new Array(n); res[pos]=options[oursIdx];
+  let oi=0; for(let k=0;k<n;k++){ if(k!==pos) res[k]=others[oi++]; }
+  return res;
+}
+
+// keep only options that have an image (drops NEEDS_MAPPING / MISSING)
+let TR = (window.TRIALS||[]).map(t=>({...t, options:t.options.filter(o=>o.img)}))
+                            .filter(t=>t.options.length>=2);
+let chosen = shuffle(TR);
+if (CASES_PER_PARTICIPANT) chosen = chosen.slice(0, CASES_PER_PARTICIPANT);
+
+// preload
+const imgs = GUIDE_IMAGES.map(U);
+chosen.forEach(t=>{ imgs.push(U(t.source_img)); t.options.forEach(o=>imgs.push(U(o.img))); });
+
+if (TR.length === 0) {
+  document.body.innerHTML = "<h2 style='font-family:sans-serif;color:#dc2626;text-align:center;margin-top:40px'>trials.js를 불러오지 못했습니다. experiment.html과 trials.js가 같은 폴더에 있는지 확인하세요.</h2>";
+  throw new Error("no trials");
+}
+
+const timeline = [];
+// non-blocking preload: never hangs if a host/URL is wrong
+timeline.push({type: jsPsychPreload, images: imgs, continue_after_error:true,
+               max_load_time: 6000, message:"Loading images…"});
+
+// ---------- welcome page ----------
+timeline.push({
+  type: jsPsychHtmlButtonResponse,
+  stimulus: `
+    <div style="max-width:820px;margin:auto;text-align:left;line-height:1.65;font-size:17px">
+      <h2 style="text-align:center">Welcome</h2>
+      <p>Thank you for participating in our user study on multi-object image editing.</p>
+      <p>This study aims to develop a framework capable of producing natural and precise image edits
+         that align with the user’s intent. This study consists of a total of ${chosen.length} cases.</p>
+      <p>Each case includes one question, and an example is provided before you begin each one.
+         While there is no single “correct” answer in artistic evaluation, this study focuses on assessing whether
+         “<b>The edited image accurately reflects the user’s intent by clearly distinguishing between the regions
+         that should be edited and those that should be preserved, while maintaining overall naturalness.</b>”</p>
+      <p>Please respond to each question within approximately 20 seconds, choosing the option that best matches
+         your impression. If possible, we recommend completing the survey on a desktop or laptop for better visibility.</p>
+      <p>Thank you very much for your time and participation.
+         <b>(Please make sure to click the ‘Submit’ button at the end!)</b></p>
+    </div>`,
+  choices: ["Start"]
+});
+
+// ---------- guideline / example pages ----------
+GUIDE_IMAGES.forEach((g,i)=>{
+  timeline.push({
+    type: jsPsychHtmlButtonResponse,
+    stimulus: `
+      <p style="max-width:900px;margin:6px auto 10px;font-size:16px;color:#b45309;font-weight:600">
+        This is an EXAMPLE question for illustration. In the actual study, each question has
+        <u>7 options (A–G)</u>, and you select exactly one.</p>
+      <div class="guide"><img src="${U(g)}" alt="guideline ${i+1}"></div>`,
+    choices: [ i < GUIDE_IMAGES.length-1 ? "Next" : "I understand — start" ]
+  });
+});
+
+// ---------- one case per trial (forced single choice via required radios) ----------
+chosen.forEach(t=>{
+  const order = biasedOrder(t.options);       // Ours biased to top-left; others random; anonymized
+  const cards = order.map((o,i)=>`
+     <div class="cand" id="card-${i}">
+       <img src="${U(o.img)}" alt="option ${LETTERS[i]}">
+       <label><input type="radio" name="choice" value="${i}" required> ${LETTERS[i]}</label>
+     </div>`).join("");
+  const html = `
+    <div class="inputwrap"><img src="${U(t.source_img)}" alt="input">
+      <div class="inputcap">INPUT — source image, masks, and the target edit</div></div>
+    <div class="prompt-box">Which edited result below best applies the edit described above,
+      while keeping everything else natural and unchanged?</div>
+    <div class="hint">Select exactly one (A–${LETTERS[order.length-1]}) to continue.</div>
+    <div class="cand-grid">${cards}</div>
+    <div class="err" id="err">Please select one option to continue.</div>`;
+  timeline.push({
+    type: jsPsychSurveyHtmlForm,
+    html: html,
+    button_label: "Next",
+    data: {task:"choice", bench:t.bench, case:t.case, target_prompt:t.target_prompt,
+           order: order.map(o=>o.method)},
+    on_load: () => {
+      // visual selected-highlight
+      document.querySelectorAll('.cand').forEach((c,i)=>{
+        c.addEventListener('click', ()=>{
+          document.querySelectorAll('.cand').forEach(x=>x.classList.remove('sel'));
+          c.classList.add('sel');
+          c.querySelector('input').checked = true;
+        });
+      });
+    },
+    on_finish: d => {
+      const idx = parseInt(d.response.choice);
+      d.chosen_position = LETTERS[idx];
+      d.chosen_method = order[idx].method;
+    }
+  });
+});
+
+// ---------- optional comment ----------
+timeline.push({
+  type: jsPsychSurveyHtmlForm,
+  preamble:"<p>Almost done — one optional question.</p>",
+  html:`<p>Any comments? (optional)<br><textarea name="comments" rows="3" cols="55"></textarea></p>`,
+  button_label:"Save & finish"
+});
+
+// ---------- save all responses to DataPipe (no server needed) ----------
+// Guarded so local testing still works even if the pipe plugin/ID isn't set up yet.
+if (typeof jsPsychPipe !== "undefined" && DATAPIPE_ID && DATAPIPE_ID !== "YOUR_DATAPIPE_ID") {
+  const filename = `${PID}_${jsPsych.randomization.randomID(6)}.csv`;
+  timeline.push({
+    type: jsPsychPipe,
+    action: "save",
+    experiment_id: DATAPIPE_ID,
+    filename: filename,
+    data_string: () => jsPsych.data.get().csv(),
+    message: "<p style='font-family:sans-serif'>Saving your responses…</p>"
+  });
+} else {
+  console.warn("DataPipe not active — responses will NOT be saved. Set DATAPIPE_ID + load plugin before publishing.");
+}
+
+// ---------- floating "Response Guidelines" button + modal (available on every screen) ----------
+(function(){
+  const css=document.createElement('style');
+  css.textContent=`
+    #gl-btn{position:fixed;top:12px;right:12px;z-index:1000;background:#2563eb;color:#fff;border:none;
+      border-radius:8px;padding:9px 15px;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.18)}
+    #gl-modal{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1001;display:none;
+      align-items:flex-start;justify-content:center;overflow:auto;padding:28px 12px}
+    #gl-modal .box{background:#fff;max-width:780px;width:100%;border-radius:12px;padding:22px 28px;text-align:left;line-height:1.55;font-size:15px}
+    #gl-modal h2{margin:0 0 6px}
+    #gl-modal h3{color:#1d4ed8;margin:18px 0 6px;font-size:16px}
+    #gl-modal .lbl{font-weight:600;margin-top:8px}
+    #gl-modal .lbl.fail{color:#b91c1c}
+    #gl-modal ul{margin:4px 0 6px 22px}
+    #gl-modal ul.fail li{color:#b91c1c}
+    #gl-modal .elim{font-style:italic;color:#475569;margin-top:6px}
+    #gl-close{margin-top:18px;background:#111;color:#fff;border:none;border-radius:8px;padding:9px 20px;cursor:pointer}`;
+  document.head.appendChild(css);
+  const btn=document.createElement('button'); btn.id='gl-btn'; btn.textContent='📋 Response Guidelines';
+  const modal=document.createElement('div'); modal.id='gl-modal';
+  modal.innerHTML=`<div class="box">
+    <h2>Response Guidelines</h2>
+    <h3>[Step 1] Evaluate whether the edit target was generated exactly within the specified region</h3>
+    <div class="lbl">Consider the following:</div>
+    <ul><li>After checking the given mask (specified region) and the target text prompt, evaluate whether that region was edited into the specified object. (The more successes, the better the edit.)</li></ul>
+    <div class="lbl fail">The following are considered failure cases:</div>
+    <ul class="fail"><li>The specified object is not edited (missing)</li><li>A different object is generated</li><li>The object is generated in a different location</li></ul>
+    <div class="elim">Samples that do not satisfy Step 1 are eliminated.</div>
+    <h3>[Step 2] Evaluate how well the edited object preserves the attributes of the original object and how naturally it was edited</h3>
+    <div class="lbl">Consider the following:</div>
+    <ul><li>How well the edited object preserves key attributes of the object in the source image, such as pose and texture</li>
+        <li>Whether the content of the target prompt is correctly reflected</li></ul>
+    <div class="lbl fail">The following is considered a failure case:</div>
+    <ul class="fail"><li>The edit follows the target text prompt, but the shape and structure of the original were not taken into account</li></ul>
+    <h3>[Step 3] Evaluate how identically the background outside the edit region is preserved compared to the original</h3>
+    <div class="lbl">Consider the following:</div>
+    <ul><li>How similar the area outside the specified mask is to the original</li></ul>
+    <div class="lbl fail">The following are considered failure cases:</div>
+    <ul class="fail"><li>The background is substantially altered or texture distortion occurs</li>
+        <li>Distortion appears around the object mask, or mask boundary traces remain</li></ul>
+    <button id="gl-close">Close</button>
+  </div>`;
+  document.body.appendChild(btn); document.body.appendChild(modal);
+  const open=()=>modal.style.display='flex', close=()=>modal.style.display='none';
+  btn.addEventListener('click',open);
+  modal.addEventListener('click',e=>{ if(e.target===modal) close(); });
+  modal.querySelector('#gl-close').addEventListener('click',close);
+})();
+
+jsPsych.run(timeline);
+</script>
+</html>
