@@ -74,8 +74,8 @@ function biasedOrder(options){
   const others=shuffle(options.filter(o=>o.method!=="Ours"));
   const topSize=Math.min(4,n);
   let pos;
-  if(Math.random()<0.8 || n<=topSize){
-    pos=weightedPick([0.45,0.30,0.15,0.10].slice(0,topSize)); // left-biased within top row
+  if(Math.random()<0.9 || n<=topSize){
+    pos=weightedPick([0.60,0.22,0.12,0.06].slice(0,topSize)); // strongly top-left biased
   }else{
     const bottom=[]; for(let k=topSize;k<n;k++) bottom.push(k);
     pos=bottom[(Math.random()*bottom.length)|0];
