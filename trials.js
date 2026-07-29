@@ -4,6 +4,43 @@
 window.TRIALS = [
   {
     "bench": "LoMOE-bench",
+    "case": 13,
+    "source_prompt": "",
+    "target_prompt": "a white bowl of red sauce pasta, mashed potatoes and meatballs",
+    "source_img": "study_assets/LoMOE-bench/13/source.png",
+    "options": [
+      {
+        "method": "LoMOE",
+        "img": "study_assets/LoMOE-bench/13/LoMOE.png"
+      },
+      {
+        "method": "OIR",
+        "img": "study_assets/LoMOE-bench/13/OIR.png"
+      },
+      {
+        "method": "ALE",
+        "img": "study_assets/LoMOE-bench/13/ALE.png"
+      },
+      {
+        "method": "IDAttn",
+        "img": "study_assets/LoMOE-bench/13/IDAttn.png"
+      },
+      {
+        "method": "LayerEdit",
+        "img": "study_assets/LoMOE-bench/13/LayerEdit.png"
+      },
+      {
+        "method": "SplitFlow",
+        "img": "study_assets/LoMOE-bench/13/SplitFlow.png"
+      },
+      {
+        "method": "Ours",
+        "img": "study_assets/LoMOE-bench/13/Ours.png"
+      }
+    ]
+  },
+  {
+    "bench": "LoMOE-bench",
     "case": 14,
     "source_prompt": "four cats are eating cupcakes on a plate",
     "target_prompt": "an orange dogs and a real dog eating dog food on a plate",
@@ -36,43 +73,6 @@ window.TRIALS = [
       {
         "method": "Ours",
         "img": "study_assets/LoMOE-bench/14/Ours.png"
-      }
-    ]
-  },
-  {
-    "bench": "LoMOE-bench",
-    "case": 27,
-    "source_prompt": "four barstools beside a table and a basket on the table",
-    "target_prompt": "two barstools with a green cushion, two barstools with a blue cushion beside a table and a steel basket with fruits on the table",
-    "source_img": "study_assets/LoMOE-bench/27/source.png",
-    "options": [
-      {
-        "method": "LoMOE",
-        "img": "study_assets/LoMOE-bench/27/LoMOE.png"
-      },
-      {
-        "method": "OIR",
-        "img": "study_assets/LoMOE-bench/27/OIR.png"
-      },
-      {
-        "method": "ALE",
-        "img": "study_assets/LoMOE-bench/27/ALE.png"
-      },
-      {
-        "method": "IDAttn",
-        "img": "study_assets/LoMOE-bench/27/IDAttn.png"
-      },
-      {
-        "method": "LayerEdit",
-        "img": "study_assets/LoMOE-bench/27/LayerEdit.png"
-      },
-      {
-        "method": "SplitFlow",
-        "img": "study_assets/LoMOE-bench/27/SplitFlow.png"
-      },
-      {
-        "method": "Ours",
-        "img": "study_assets/LoMOE-bench/27/Ours.png"
       }
     ]
   },
@@ -374,6 +374,43 @@ window.TRIALS = [
   },
   {
     "bench": "Ours-eccv-lomoe",
+    "case": 6,
+    "source_prompt": "",
+    "target_prompt": "four_teddy_bears_and_an_apple_in_front_of_a_white_background",
+    "source_img": "study_assets/Ours-eccv-lomoe/6/source.png",
+    "options": [
+      {
+        "method": "LoMOE",
+        "img": "study_assets/Ours-eccv-lomoe/6/LoMOE.png"
+      },
+      {
+        "method": "OIR",
+        "img": "study_assets/Ours-eccv-lomoe/6/OIR.png"
+      },
+      {
+        "method": "ALE",
+        "img": "study_assets/Ours-eccv-lomoe/6/ALE.png"
+      },
+      {
+        "method": "IDAttn",
+        "img": "study_assets/Ours-eccv-lomoe/6/IDAttn.png"
+      },
+      {
+        "method": "LayerEdit",
+        "img": "study_assets/Ours-eccv-lomoe/6/LayerEdit.png"
+      },
+      {
+        "method": "SplitFlow",
+        "img": "study_assets/Ours-eccv-lomoe/6/SplitFlow.png"
+      },
+      {
+        "method": "Ours",
+        "img": "study_assets/Ours-eccv-lomoe/6/Ours.png"
+      }
+    ]
+  },
+  {
+    "bench": "Ours-eccv-lomoe",
     "case": 7,
     "source_prompt": "",
     "target_prompt": "A teddy bear and a rabbit are sitting in front of a white background",
@@ -411,43 +448,6 @@ window.TRIALS = [
   },
   {
     "bench": "Ours-eccv-lomoe",
-    "case": 29,
-    "source_prompt": "",
-    "target_prompt": "a bear and a cat and a bird are sitting on a wooden bench",
-    "source_img": "study_assets/Ours-eccv-lomoe/29/source.png",
-    "options": [
-      {
-        "method": "LoMOE",
-        "img": "study_assets/Ours-eccv-lomoe/29/LoMOE.png"
-      },
-      {
-        "method": "OIR",
-        "img": "study_assets/Ours-eccv-lomoe/29/OIR.png"
-      },
-      {
-        "method": "ALE",
-        "img": "study_assets/Ours-eccv-lomoe/29/ALE.png"
-      },
-      {
-        "method": "IDAttn",
-        "img": "study_assets/Ours-eccv-lomoe/29/IDAttn.png"
-      },
-      {
-        "method": "LayerEdit",
-        "img": "study_assets/Ours-eccv-lomoe/29/LayerEdit.png"
-      },
-      {
-        "method": "SplitFlow",
-        "img": "study_assets/Ours-eccv-lomoe/29/SplitFlow.png"
-      },
-      {
-        "method": "Ours",
-        "img": "study_assets/Ours-eccv-lomoe/29/Ours.png"
-      }
-    ]
-  },
-  {
-    "bench": "Ours-eccv-lomoe",
     "case": 45,
     "source_prompt": "",
     "target_prompt": "a stone statue holding a golden pole in the wild",
@@ -480,6 +480,43 @@ window.TRIALS = [
       {
         "method": "Ours",
         "img": "study_assets/Ours-eccv-lomoe/45/Ours.png"
+      }
+    ]
+  },
+  {
+    "bench": "Ours-eccv-lomoe",
+    "case": 56,
+    "source_prompt": "",
+    "target_prompt": "two eagles on a table",
+    "source_img": "study_assets/Ours-eccv-lomoe/56/source.png",
+    "options": [
+      {
+        "method": "LoMOE",
+        "img": "study_assets/Ours-eccv-lomoe/56/LoMOE.png"
+      },
+      {
+        "method": "OIR",
+        "img": "study_assets/Ours-eccv-lomoe/56/OIR.png"
+      },
+      {
+        "method": "ALE",
+        "img": "study_assets/Ours-eccv-lomoe/56/ALE.png"
+      },
+      {
+        "method": "IDAttn",
+        "img": "study_assets/Ours-eccv-lomoe/56/IDAttn.png"
+      },
+      {
+        "method": "LayerEdit",
+        "img": "study_assets/Ours-eccv-lomoe/56/LayerEdit.png"
+      },
+      {
+        "method": "SplitFlow",
+        "img": "study_assets/Ours-eccv-lomoe/56/SplitFlow.png"
+      },
+      {
+        "method": "Ours",
+        "img": "study_assets/Ours-eccv-lomoe/56/Ours.png"
       }
     ]
   },
@@ -554,43 +591,6 @@ window.TRIALS = [
       {
         "method": "Ours",
         "img": "study_assets/Ours-N3-5/54/Ours.png"
-      }
-    ]
-  },
-  {
-    "bench": "Ours-N3-5",
-    "case": 91,
-    "source_prompt": "",
-    "target_prompt": "Vintage furniture including a white leather lounge chair, a brown sofa, glass display cabinet, a golden statue, a clock and two oval mirrors arranged in an eclectic interior",
-    "source_img": "study_assets/Ours-N3-5/91/source.png",
-    "options": [
-      {
-        "method": "LoMOE",
-        "img": "study_assets/Ours-N3-5/91/LoMOE.png"
-      },
-      {
-        "method": "OIR",
-        "img": "study_assets/Ours-N3-5/91/OIR.png"
-      },
-      {
-        "method": "ALE",
-        "img": "study_assets/Ours-N3-5/91/ALE.png"
-      },
-      {
-        "method": "IDAttn",
-        "img": "study_assets/Ours-N3-5/91/IDAttn.png"
-      },
-      {
-        "method": "LayerEdit",
-        "img": "study_assets/Ours-N3-5/91/LayerEdit.png"
-      },
-      {
-        "method": "SplitFlow",
-        "img": "study_assets/Ours-N3-5/91/SplitFlow.png"
-      },
-      {
-        "method": "Ours",
-        "img": "study_assets/Ours-N3-5/91/Ours.png"
       }
     ]
   }
