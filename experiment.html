@@ -17,13 +17,21 @@
   .guide img{max-width:100%;max-height:78vh;border:1px solid #e5e7eb;border-radius:8px}
   .inputwrap{margin:4px auto 10px}
   .inputwrap img{max-width:100%;max-height:290px;height:auto;border:2px solid #94a3b8;border-radius:10px}
-  .prompt-box{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:10px 20px;
-     margin:8px auto 12px;max-width:1080px;font-size:16px;line-height:1.4}
+  .prompt-box{background:#f4f4f5;border:1px solid #e4e4e7;border-radius:10px;padding:10px 20px;
+     margin:8px auto 12px;max-width:1080px;font-size:16px;line-height:1.4;color:#111}
   .prompt-box b{color:#1d4ed8}
   .hint{color:#475569;font-size:14px;margin-bottom:10px}
-  .qcount{text-align:center;color:#1d4ed8;font-weight:700;font-size:16px;margin:2px 0 10px;
-     background:#eff6ff;border:1px solid #bfdbfe;border-radius:20px;padding:4px 14px;display:inline-block}
+  .qcount{text-align:center;color:#111;font-weight:700;font-size:16px;margin:2px 0 10px;
+     background:#f1f5f9;border:1px solid #e2e8f0;border-radius:20px;padding:4px 14px;display:inline-block}
   .qcount-wrap{text-align:center;margin-bottom:6px}
+  /* shared Response Guidelines styling (used on the full page and the side panel) */
+  .gl-content{line-height:1.55;font-size:15px}
+  .gl-content h3{color:#111;margin:16px 0 5px;font-size:16px}
+  .gl-content .lbl{font-weight:700;margin-top:8px}
+  .gl-content .lbl.fail{color:#b91c1c}
+  .gl-content ul{margin:4px 0 6px 20px;padding:0}
+  .gl-content ul.fail li{color:#b91c1c}
+  .gl-content .elim{font-style:italic;color:#475569;margin-top:6px}
   .cand-grid{display:grid;grid-template-columns:repeat(4,164px);justify-content:center;gap:10px}
   .cand{border:2px solid #e5e7eb;border-radius:10px;padding:6px;width:164px;cursor:pointer;
      transition:.12s;background:#fff}
@@ -61,6 +69,27 @@ const STUDY_ID = params.get("STUDY_ID") || "NA";
 const SESSION_ID = params.get("SESSION_ID") || "NA";
 const LETTERS = ["A","B","C","D","E","F","G"];
 const U = p => BASE_URL ? `${BASE_URL}/${p}` : p;   // paths already include "study_assets/"
+
+// Response Guidelines content (shown once as a full page, and via the side-panel button)
+const GUIDELINES_HTML = `
+  <h3>[Step 1] Evaluate whether the edit target was generated exactly within the specified region</h3>
+  <div class="lbl">Consider the following:</div>
+  <ul><li>After checking the given mask (specified region) and the target text prompt, evaluate whether that region was edited into the specified object. (The more successes, the better the edit.)</li></ul>
+  <div class="lbl fail">The following are considered failure cases:</div>
+  <ul class="fail"><li>The specified object is not edited (missing)</li><li>A different object is generated</li><li>The object is generated in a different location</li></ul>
+  <div class="elim">Samples that do not satisfy Step 1 are eliminated.</div>
+  <h3>[Step 2] Evaluate how well the edited object preserves the attributes of the original object and how naturally it was edited</h3>
+  <div class="lbl">Consider the following:</div>
+  <ul><li>How well the edited object preserves key attributes of the object in the source image, such as <b>pose and texture</b></li>
+      <li>Whether the content of the target prompt is correctly reflected</li></ul>
+  <div class="lbl fail">The following is considered a failure case:</div>
+  <ul class="fail"><li>The edit follows the target text prompt, but the shape and structure of the original were not taken into account</li></ul>
+  <h3>[Step 3] Evaluate how identically the background outside the edit region is preserved compared to the original</h3>
+  <div class="lbl">Consider the following:</div>
+  <ul><li>How similar the area outside the specified mask is to the original</li></ul>
+  <div class="lbl fail">The following are considered failure cases:</div>
+  <ul class="fail"><li>The background is substantially altered or texture distortion occurs</li>
+      <li>Distortion appears around the object mask, or mask boundary traces remain</li></ul>`;
 
 const jsPsych = initJsPsych({ on_finish: () => location.href = PROLIFIC_COMPLETION_URL });
 jsPsych.data.addProperties({prolific_pid:PID, study_id:STUDY_ID, session_id:SESSION_ID});
@@ -126,7 +155,7 @@ timeline.push({
   choices: ["Start"]
 });
 
-// ---------- guideline / example pages ----------
+// ---------- example pages ----------
 GUIDE_IMAGES.forEach((g,i)=>{
   timeline.push({
     type: jsPsychHtmlButtonResponse,
@@ -135,8 +164,18 @@ GUIDE_IMAGES.forEach((g,i)=>{
         This is an EXAMPLE question for illustration. In the actual study, each question has
         <u>7 options (A–G)</u>, and you select exactly one.</p>
       <div class="guide"><img src="${U(g)}" alt="guideline ${i+1}"></div>`,
-    choices: [ i < GUIDE_IMAGES.length-1 ? "Next" : "I understand — start" ]
+    choices: ["Next"]
   });
+});
+
+// ---------- Response Guidelines (shown once as a full page) ----------
+timeline.push({
+  type: jsPsychHtmlButtonResponse,
+  stimulus: `<div class="gl-content" style="max-width:840px;margin:auto;text-align:left">
+     <h2 style="text-align:center;margin-top:0">Response Guidelines</h2>
+     <p style="text-align:center;color:#64748b;font-size:14px">You can reopen these anytime using the button in the top-right corner.</p>
+     ${GUIDELINES_HTML}</div>`,
+  choices: ["I understand — start the study"]
 });
 
 // ---------- one case per trial (forced single choice via required radios) ----------
@@ -200,51 +239,25 @@ if (typeof jsPsychPipe !== "undefined" && DATAPIPE_ID && DATAPIPE_ID !== "YOUR_D
   console.warn("DataPipe not active — responses will NOT be saved. Set DATAPIPE_ID + load plugin before publishing.");
 }
 
-// ---------- "Response Guidelines" side panel (opens beside content; non-blocking) ----------
+// ---------- "Response Guidelines" side panel (button toggles; used during questions) ----------
 (function(){
   const css=document.createElement('style');
   css.textContent=`
-    #gl-btn{position:fixed;top:12px;right:12px;z-index:1002;background:#2563eb;color:#fff;border:none;
+    #gl-btn{position:fixed;top:12px;right:12px;z-index:1002;background:#111;color:#fff;border:none;
       border-radius:8px;padding:9px 15px;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.18)}
     #gl-panel{position:fixed;top:0;right:0;width:400px;max-width:92vw;height:100%;background:#fff;
       box-shadow:-3px 0 14px rgba(0,0,0,.18);z-index:1001;overflow:auto;padding:16px 22px 46px;
-      box-sizing:border-box;transform:translateX(100%);transition:transform .22s ease;
-      text-align:left;line-height:1.5;font-size:14px}
+      box-sizing:border-box;transform:translateX(100%);transition:transform .22s ease;text-align:left}
     #gl-panel.open{transform:translateX(0)}
     #gl-panel h2{margin:0 0 6px;font-size:18px}
-    #gl-panel h3{color:#1d4ed8;margin:16px 0 5px;font-size:15px}
-    #gl-panel .lbl{font-weight:600;margin-top:8px}
-    #gl-panel .lbl.fail{color:#b91c1c}
-    #gl-panel ul{margin:4px 0 6px 20px;padding:0}
-    #gl-panel ul.fail li{color:#b91c1c}
-    #gl-panel .elim{font-style:italic;color:#475569;margin-top:6px}
     #gl-x{position:absolute;top:8px;right:12px;background:none;border:none;font-size:24px;line-height:1;cursor:pointer;color:#64748b}
-    /* push page content left so the open panel doesn't cover options */
     body.gl-open{transition:padding-right .22s ease;padding-right:410px}
     @media (max-width:820px){ body.gl-open{padding-right:0} }`;
   document.head.appendChild(css);
   const btn=document.createElement('button'); btn.id='gl-btn'; btn.textContent='📋 Response Guidelines';
   const panel=document.createElement('div'); panel.id='gl-panel';
   panel.innerHTML=`<button id="gl-x" title="close">×</button>
-    <h2>Response Guidelines</h2>
-    <h3>[Step 1] Evaluate whether the edit target was generated exactly within the specified region</h3>
-    <div class="lbl">Consider the following:</div>
-    <ul><li>After checking the given mask (specified region) and the target text prompt, evaluate whether that region was edited into the specified object. (The more successes, the better the edit.)</li></ul>
-    <div class="lbl fail">The following are considered failure cases:</div>
-    <ul class="fail"><li>The specified object is not edited (missing)</li><li>A different object is generated</li><li>The object is generated in a different location</li></ul>
-    <div class="elim">Samples that do not satisfy Step 1 are eliminated.</div>
-    <h3>[Step 2] Evaluate how well the edited object preserves the attributes of the original object and how naturally it was edited</h3>
-    <div class="lbl">Consider the following:</div>
-    <ul><li>How well the edited object preserves key attributes of the object in the source image, such as <b>pose and texture</b></li>
-        <li>Whether the content of the target prompt is correctly reflected</li></ul>
-    <div class="lbl fail">The following is considered a failure case:</div>
-    <ul class="fail"><li>The edit follows the target text prompt, but the shape and structure of the original were not taken into account</li></ul>
-    <h3>[Step 3] Evaluate how identically the background outside the edit region is preserved compared to the original</h3>
-    <div class="lbl">Consider the following:</div>
-    <ul><li>How similar the area outside the specified mask is to the original</li></ul>
-    <div class="lbl fail">The following are considered failure cases:</div>
-    <ul class="fail"><li>The background is substantially altered or texture distortion occurs</li>
-        <li>Distortion appears around the object mask, or mask boundary traces remain</li></ul>`;
+    <h2>Response Guidelines</h2><div class="gl-content">${GUIDELINES_HTML}</div>`;
   const setOpen=(o)=>{ panel.classList.toggle('open',o); document.body.classList.toggle('gl-open',o); };
   btn.addEventListener('click',()=>setOpen(!panel.classList.contains('open')));
   panel.querySelector('#gl-x').addEventListener('click',()=>setOpen(false));
